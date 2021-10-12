@@ -6,6 +6,8 @@ mod errors;
 mod session;
 mod create;
 mod cli;
+mod pane;
+mod window;
 
 use errors::{Errcode, handle_error};
 use cli::Commands;
