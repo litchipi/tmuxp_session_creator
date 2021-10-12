@@ -3,6 +3,7 @@ pub enum Errcode {
     ArgValidationError(&'static str),
     JsonError(String),
     FileError(String),
+    EnvError(u8),
 }
 
 pub fn handle_error(err: Errcode) -> i32 {

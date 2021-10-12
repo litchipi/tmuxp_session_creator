@@ -3,12 +3,13 @@ use std::path::PathBuf;
 use std::fs::File;
 use std::io::prelude::*;
 use serde_json::to_string;
+use dirs::home_dir;
 
 use crate::cli::CliSubCommand;
 use crate::session::TmuxSession;
 use crate::errors::Errcode;
 
-
+const TMUXP_DIR: &'static str = ".tmuxp/";
 pub type WindowDescription = String;
 
 #[derive(Debug, StructOpt)]
@@ -28,10 +29,14 @@ pub struct TmuxpSessionCreation {
 
 impl CliSubCommand for TmuxpSessionCreation {
     fn execute_command(&self) -> Result<(), Errcode>{
-        let tmuxp_dir = PathBuf::from("~/.tmuxp/");
         let tmuxses = TmuxSession::from(self);
-        let output_fname = tmuxp_dir.join(self.session_name.replace(" ", "_") + ".json");
+        let mut output_fname = PathBuf::from(home_dir().ok_or(Errcode::EnvError(0))?);
+        output_fname.push(TMUXP_DIR);
+        output_fname.push(self.session_name.replace(" ", "_"));
+        output_fname.set_extension("json");
         
+        println!("{:?}", output_fname);
+        println!("{:?}", home_dir().unwrap());
         let mut file = File::create(output_fname)?;
         file.write_all(to_string(&tmuxses)?.as_bytes())?;
         Ok(())
