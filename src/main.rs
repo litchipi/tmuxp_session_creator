@@ -13,6 +13,7 @@ mod edit;
 use errors::{Errcode, handle_error};
 use cli::Commands;
 
+// TODO  Setup log for entire project
 fn main() {
     match Commands::from_args().start() {
         Ok(_) => exit(0),

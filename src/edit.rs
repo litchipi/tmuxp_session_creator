@@ -1,5 +1,6 @@
 use structopt::StructOpt;
 
+use crate::session::TmuxSession;
 use crate::cli::CliSubCommand;
 use crate::errors::Errcode;
 use crate::window::{WindowDescription, WindowLayout, get_npane_from_layout};
@@ -16,15 +17,28 @@ pub struct TmuxpSessionEdition {
 
     /// The layout to apply to the window
     #[structopt(short, long,)]
-    pub layout: String,
+    pub layout: Option<String>,
 }
 
 impl CliSubCommand for TmuxpSessionEdition {
+
     fn execute_command(&self) -> Result<(), Errcode>{
-        let n = get_npane_from_layout(self.layout.as_ref())?;
         println!("Session name \"{}\"", self.name);
+        let mut tmuxses = TmuxSession::load(&self.name)?;
         println!("Window {}", self.window_ind);
-        println!("{} panes", n);
+
+        if let Some(l) = &self.layout {
+            let n = get_npane_from_layout(l)?;
+            println!("{} panes", n);
+
+            let lenwin = tmuxses.windows.len();
+            tmuxses.windows
+                .get_mut(self.window_ind)
+                .ok_or(Errcode::WindowNotFound(self.window_ind, lenwin))?
+                .layout = Some(l.clone());
+        }
+        tmuxses.dump()?;
+        //tmuxses.write_to_file()?;
         Ok(())
     }
 

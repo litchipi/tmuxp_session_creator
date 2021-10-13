@@ -1,5 +1,8 @@
 use serde::{Serializer, Serialize, Deserialize};
 use serde::ser::{SerializeStruct, SerializeSeq};
+use serde_json::{Map, Value};
+
+use crate::errors::Errcode;
 
 // List of commands
 pub type TmuxPane = String;
@@ -16,6 +19,18 @@ impl FocusedPane {
             shell_command: cmd,
             focus: true
         }
+    }
+
+    pub fn from_json(val: &Map<String, Value>) -> Result<FocusedPane, Errcode> {
+        let mut pane = FocusedPane::from_cmd("".to_string());
+        for (key, val) in val.iter() {
+            match key.as_ref() {
+                "focus" => pane.focus = val.to_string() == "true",
+                "shell_command" => pane.shell_command = val.to_string(),
+                _ => return Err(Errcode::JsonError("FocusedPane from Json".to_string())),
+            }
+        }
+        Ok(pane)
     }
 }
 

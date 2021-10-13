@@ -7,7 +7,11 @@ pub enum Errcode {
     FileError(String),
     ParsingError(String),
     EnvError(u8),
+    OptionNotFound(String),
+    WindowNotFound(usize, usize),
 }
+
+// TODO     Display custom error messages for variants
 
 pub fn handle_error(err: Errcode) -> i32 {
     println!("Error occured: {:?}", err);
