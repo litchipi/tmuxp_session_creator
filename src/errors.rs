@@ -1,3 +1,5 @@
+use std::num::ParseIntError;
+
 #[derive(Debug)]
 pub enum Errcode {
     ArgValidationError(&'static str),
@@ -22,4 +24,8 @@ impl From<serde_json::Error> for Errcode {
 
 impl From<nom::Err<nom::error::Error<&str>>> for Errcode {
     fn from(e: nom::Err<nom::error::Error<&str>>) -> Errcode { Errcode::ParsingError(format!("{:?}", e)) }
+}
+
+impl From<ParseIntError> for Errcode {
+    fn from(e: ParseIntError) -> Errcode { Errcode::ParsingError(format!("Error parsing int: {:?}", e)) }
 }

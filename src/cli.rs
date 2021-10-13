@@ -3,6 +3,7 @@ use enum_dispatch::enum_dispatch;
 
 use crate::errors::Errcode;
 use crate::create::TmuxpSessionCreation;
+use crate::edit::TmuxpSessionEdition;
 
 macro_rules! cli_commands {
     ($($name:ident => $impl:ident),+) => {
@@ -32,7 +33,8 @@ pub trait CliSubCommand {
 }
 
 cli_commands!(
-    Create => TmuxpSessionCreation
+    Create => TmuxpSessionCreation,
+    Edit => TmuxpSessionEdition
 );
 
 pub fn subcmd<T: CliSubCommand>(args: &T) -> Result<(), Errcode> {

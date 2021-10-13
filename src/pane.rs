@@ -2,7 +2,7 @@ use serde::{Serializer, Serialize, Deserialize};
 use serde::ser::{SerializeStruct, SerializeSeq};
 
 // List of commands
-pub type TmuxPane = Vec<String>;
+pub type TmuxPane = String;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct FocusedPane {
@@ -11,9 +11,9 @@ pub struct FocusedPane {
 }
 
 impl FocusedPane {
-    pub fn from_cmd_vec(cmds: Vec<String>) -> FocusedPane {
+    pub fn from_cmd(cmd: TmuxPane) -> FocusedPane {
         FocusedPane {
-            shell_command: cmds.join(" && "),
+            shell_command: cmd,
             focus: true
         }
     }

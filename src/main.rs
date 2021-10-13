@@ -8,6 +8,7 @@ mod create;
 mod cli;
 mod pane;
 mod window;
+mod edit;
 
 use errors::{Errcode, handle_error};
 use cli::Commands;

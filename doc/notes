@@ -1,0 +1,19 @@
+Multiple panes:
+	3 Horiz:
+		cd3d,211x62,0,0[211x31,0,0,10,211x15,0,32,11,211x14,0,48,14]
+	Horiz & Vert
+		f8ad,211x62,0,0[211x31,0,0,10,211x15,0,32,11,211x14,0,48{105x14,0,48,14,105x14,106,48,16}]
+	Vert only:
+		a66b,211x62,0,0{105x62,0,0,17,105x62,106,0,18}
+	Horiz and vert 4 in square:
+		ff43,211x62,0,0[211x31,0,0{105x31,0,0,19,105x31,106,0,22},211x30,0,32{105x30,0,32,20,105x30,106,32,21}]
+	
+		x,x,x,x,x
+		a,a,a,a[x,x,x,x, y,y,y,y, ...]
+		a,a,a,a[x,x,x,x, y,y,y{z,z,z,z, w,w,w,w}]
+		a,a,a,a{x,x,x,x, y,y,y,y}
+
+Alias to update the layout:
+	tmuxp_session_creator edit -n "$(tmux display-message -p '#S')" -w $(tmux display-message -p '#I') -l "$(tmux display-message -p '#{window_layout}')"
+
+	ask interactively each commands (by default the ones already entered)
