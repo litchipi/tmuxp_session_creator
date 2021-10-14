@@ -26,6 +26,8 @@ impl TryFrom<&TmuxpSessionCreation> for TmuxSession {
     type Error = Errcode;
 
     fn try_from(c: &TmuxpSessionCreation) -> Result<TmuxSession, Errcode> {
+
+        let startdir = c.start_directory.canonicalize()?;
         let mut windows : Vec<TmuxWindow> = {
             println!("{:?}", c);
             if !c.default {
@@ -35,12 +37,12 @@ impl TryFrom<&TmuxpSessionCreation> for TmuxSession {
                     if windescr.len() > 0 {
                         res.push(TmuxWindow::try_from(windescr)?);
                     } else {
-                        res.push(TmuxWindow::default(c.start_directory.clone()));
+                        res.push(TmuxWindow::default(startdir.clone()));
                     }
                 }
                 res
             } else {
-                vec![TmuxWindow::default(c.start_directory.clone())]
+                vec![TmuxWindow::default(startdir.clone())]
             }
         };
 
@@ -50,7 +52,7 @@ impl TryFrom<&TmuxpSessionCreation> for TmuxSession {
 
         Ok(TmuxSession {
             session_name: c.session_name.clone(),
-            start_directory: c.start_directory.clone(),
+            start_directory: startdir.clone(),
             windows,
         })
     }

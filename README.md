@@ -13,7 +13,7 @@ mkdir -p ~/.tmuxp/
 alias quit='tmux kill-session; exit 0'
 alias listses='ls ~/.tmuxp/ | awk -F "/" "{print $NF}" | cut -d "." -f 1'
 alias tmuxload="$(which tmuxp) load"
-alias savelayout='test $TMUX && tmuxp_session_creator edit -n "$(tmux display-message -p '#S')" -w $(tmux display-message -p '#I') -l "$(tmux display-message -p '#{window_layout}')"'
+alias savelayout='test $TMUX && tmuxp_session_creator edit -n '"\"$(tmux display-message -p '#S')\" -w \"$(tmux display-message -p '#I')\" -l \"$(tmux display-message -p '#{window_layout}')\"
 
 function _tmuxload_autocomplete {
     COMPREPLY=($(compgen -W "$(listses)" "${COMP_WORDS[1]}"))

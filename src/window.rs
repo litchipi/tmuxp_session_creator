@@ -101,7 +101,8 @@ impl TmuxWindow {
         self.start_directory = PathBuf::from_str(startdir)
             .or(Err(
                 Errcode::ParsingError("Failed to get path from window description".to_string())
-                ))?;
+                ))?
+            .canonicalize()?;
 
         let (input, autorename_str) = until_sep(input)?;
         self.automatic_rename = autorename_str == "on";
