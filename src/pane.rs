@@ -3,11 +3,12 @@ use serde::ser::{SerializeStruct, SerializeSeq};
 use serde_json::{Map, Value};
 
 use crate::errors::Errcode;
+use crate::serialisation::strval_to_string;
 
 // List of commands
 pub type TmuxPane = String;
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Deserialize, Debug)]
 pub struct FocusedPane {
     shell_command: String,
     focus: bool
@@ -25,12 +26,24 @@ impl FocusedPane {
         let mut pane = FocusedPane::from_cmd("".to_string());
         for (key, val) in val.iter() {
             match key.as_ref() {
-                "focus" => pane.focus = val.to_string() == "true",
-                "shell_command" => pane.shell_command = val.to_string(),
+                "focus" => pane.focus = strval_to_string(val)? == "true",
+                "shell_command" => pane.shell_command = strval_to_string(val)?,
                 _ => return Err(Errcode::JsonError("FocusedPane from Json".to_string())),
             }
         }
         Ok(pane)
+    }
+}
+
+impl Serialize for FocusedPane{
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        let mut state = serializer.serialize_struct("FocusedPane", 2)?;
+        state.serialize_field("shell_command", &self.shell_command)?;
+        state.serialize_field("focus", &self.focus.to_string())?;
+        state.end()
     }
 }
 
@@ -48,6 +61,10 @@ impl PaneSerializer{
             focused_index,
             others
         }
+    }
+
+    pub fn nb_panes(&self) -> usize {
+        1 + self.others.len()
     }
 }
 

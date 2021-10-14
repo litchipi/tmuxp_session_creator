@@ -18,6 +18,10 @@ pub struct TmuxpSessionEdition {
     /// The layout to apply to the window
     #[structopt(short, long,)]
     pub layout: Option<String>,
+
+    /// The layout to apply to the window
+    #[structopt(short, long,)]
+    pub dump: bool,
 }
 
 impl CliSubCommand for TmuxpSessionEdition {
@@ -32,13 +36,14 @@ impl CliSubCommand for TmuxpSessionEdition {
             println!("{} panes", n);
 
             let lenwin = tmuxses.windows.len();
-            tmuxses.windows
-                .get_mut(self.window_ind)
-                .ok_or(Errcode::WindowNotFound(self.window_ind, lenwin))?
-                .layout = Some(l.clone());
+            tmuxses.apply_layout(self.window_ind, l)?;
         }
-        tmuxses.dump()?;
-        //tmuxses.write_to_file()?;
+
+        if self.dump {
+            tmuxses.dump()?;
+        } else {
+            tmuxses.write_to_file()?;
+        }
         Ok(())
     }
 

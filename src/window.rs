@@ -6,6 +6,7 @@ use serde_json::Value;
 use std::fmt;
 use std::str::FromStr;
 use std::path::PathBuf;
+use std::cmp::Ordering;
 use std::convert::TryFrom;
 use std::collections::HashMap;
 
@@ -14,6 +15,7 @@ use nom::bytes::complete::take_until;
 
 use crate::errors::Errcode;
 use crate::pane::{PaneSerializer, FocusedPane};
+use crate::serialisation::strval_to_string;
 
 pub type WindowDescription = String;
 
@@ -129,6 +131,32 @@ impl TmuxWindow {
 
         Ok(())
     }
+
+    pub fn set_layout(&mut self, layout: &String) -> Result<(), Errcode> {
+        let n = get_npane_from_layout(layout)?;
+        
+        let npanes = self.panes.nb_panes();
+        match n.cmp(&npanes){
+            Ordering::Less => { self.drop_cmds(npanes - n)?; },
+            Ordering::Equal => {},
+            Ordering::Greater => { self.new_cmds(n - npanes)?; },
+        }
+
+        self.layout = Some(layout.clone());
+        Ok(())
+    }
+
+    pub fn drop_cmds(&mut self, ndrop: usize) -> Result<(), Errcode> {
+        println!("Dropping {} commands", ndrop);
+        //TODO
+        Ok(())
+    }
+
+    pub fn new_cmds(&mut self, nnew: usize) -> Result<(), Errcode> {
+        println!("Getting {} new commands", nnew);
+        //TODO
+        Ok(())
+    }
 }
 
 impl TryFrom<&WindowDescription> for TmuxWindow {
@@ -170,7 +198,6 @@ fn until_sep(s: &str) -> IResult<&str, &str> {
 
 
 
-
 /* ------------- Serde Serialization ------------- */
 impl Serialize for TmuxWindow{
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
@@ -187,9 +214,18 @@ impl Serialize for TmuxWindow{
         if let Some(_) = self.layout {
             state.serialize_field("layout", &self.layout)?;
         }
-        state.serialize_field("focus", &self.focus)?;
+
+        state.serialize_field("start_directory", &self.start_directory.to_str())?;
+        if self.focus {
+            state.serialize_field("focus", &self.focus.to_string())?;
+        }
         state.serialize_field("panes", &self.panes)?;
-        // TODO     Add options
+        state.serialize_field("options", &serde_json::json!(
+            {
+                "automatic-rename": if self.automatic_rename { "on" } else { "off" },
+            }
+        ))?;
+
         state.end()
     }
 }
@@ -237,6 +273,7 @@ impl<'de> Visitor<'de> for TmuxWindowVisitor {
             }
         }
 
+        println!();
         Ok(window)
     }
 }
@@ -250,16 +287,15 @@ impl TmuxWindowBuilder<Value> for TmuxWindow{
         println!("Load entry {}: {}", key, value.to_string());
         match key.as_ref() {
             "options" => self.load_json_options(value)?,
-
-            // TODO Simplify here, generalize this solution for each Value::String to String
-            // conversion to avoid the \" poison
-            "window_name" => self.window_name = value.as_str().ok_or(Errcode::JsonError("Window name".to_string()))?.to_string(),
-            "layout" => self.layout = Some(value.to_string()),
             "panes" => self.load_json_panes(value)?,
-            "focus" => self.focus = value.to_string() == "true",
-            "start_directory" => self.start_directory = PathBuf::from(value.to_string()),
+
+            "window_name" => self.window_name = strval_to_string(&value)?,
+            "layout" => self.layout = Some(strval_to_string(&value)?),
+            "focus" => self.focus = strval_to_string(&value)? == "true",
+            "start_directory" => self.start_directory = PathBuf::from(strval_to_string(&value)?),
+            
+            // TODO  Warning log here
             _ => println!("Unknown JSON key \"{}\" for Window loading", key),
-                    // TODO  Warning log here
         }
         Ok(())
     }
@@ -268,7 +304,6 @@ impl TmuxWindowBuilder<Value> for TmuxWindow{
 pub type WindowLayout = str;
 
 pub fn get_npane_from_layout(orig_layout: &WindowLayout) -> Result<usize, Errcode> {
-    //take_until(WINDOWDESCR_PARSER_SEP)(inp)
     let mut layout = orig_layout.clone();
     let mut npane = 0;
     let mut nel = 0;

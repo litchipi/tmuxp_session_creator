@@ -9,6 +9,7 @@ mod cli;
 mod pane;
 mod window;
 mod edit;
+mod serialisation;
 
 use errors::{Errcode, handle_error};
 use cli::Commands;

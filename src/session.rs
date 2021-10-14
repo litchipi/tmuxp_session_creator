@@ -95,4 +95,15 @@ impl TmuxSession {
         println!("{}", to_string_pretty(self)?);
         Ok(())
     }
+
+    pub fn apply_layout(&mut self, window_index: usize, layout: &String) -> Result<(), Errcode> {
+        let win: &mut TmuxWindow = self.get_window_ref(window_index)?;
+        win.set_layout(layout)
+    }
+
+    pub fn get_window_ref(&mut self, window_index: usize) -> Result<&mut TmuxWindow, Errcode> {
+        let winlen = self.windows.len();
+        self.windows.get_mut(window_index)
+            .ok_or(Errcode::WindowNotFound(window_index, winlen))
+    }
 }
