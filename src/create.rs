@@ -23,7 +23,12 @@ pub struct TmuxpSessionCreation {
     #[structopt(short, long, default_value = "0")]
     pub focus: usize,
 
-    /// The window description, can be passed multiple time to create multiple windows
+    /// The window description,
+    /// can be passed multiple time to create multiple windows
+    /// 
+    /// format:      NAME:STARTDIR:AUTORENAME:FOCUSED_PANE:PANE0:<PANE1>:<etc...>
+    /// 
+    /// Example:    code:./src/:off:0:nvim:cargo-watch -c:clear && bash
     #[structopt(short, long, default_value = "")]
     pub windows_description: Vec<WindowDescription>,
 

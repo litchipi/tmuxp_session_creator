@@ -27,14 +27,20 @@ impl TryFrom<&TmuxpSessionCreation> for TmuxSession {
 
     fn try_from(c: &TmuxpSessionCreation) -> Result<TmuxSession, Errcode> {
         let mut windows : Vec<TmuxWindow> = {
+            println!("{:?}", c);
             if !c.default {
                 let mut res = vec![];
+                println!("{:?}", c.windows_description);
                 for windescr in c.windows_description.iter(){
-                    res.push(TmuxWindow::try_from(windescr)?);
+                    if windescr.len() > 0 {
+                        res.push(TmuxWindow::try_from(windescr)?);
+                    } else {
+                        res.push(TmuxWindow::default(c.start_directory.clone()));
+                    }
                 }
                 res
             } else {
-                vec![TmuxWindow::default()]
+                vec![TmuxWindow::default(c.start_directory.clone())]
             }
         };
 

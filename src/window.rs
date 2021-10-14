@@ -34,17 +34,17 @@ pub struct TmuxWindow {
 }
 
 impl TmuxWindow {
-    pub fn default() -> TmuxWindow {
+    pub fn default(start_directory: PathBuf) -> TmuxWindow {
         TmuxWindow {
-            window_name: String::from("default"),
+            window_name: String::from("bash"),
             layout: None,
             focus: false,
             pane_focused: 0,
             panes: PaneSerializer::create(
                 FocusedPane::from_cmd("clear && bash".to_string()), 0,
                 vec![]),
-            automatic_rename: false,
-            start_directory: PathBuf::from("/tmp/")
+            automatic_rename: true,
+            start_directory: start_directory
         }
     }
 
@@ -92,11 +92,17 @@ impl TmuxWindow {
         Ok(())
     }
 
-    // Format:      NAME:AUTORENAME:FOCUSED_PANE:PANE0:<PANE1>:<etc...>
+    // Format:      NAME:STARTDIR:AUTORENAME:FOCUSED_PANE:PANE0:<PANE1>:<etc...>
     fn parse_windescr(&mut self, input: &str) -> Result<(), Errcode> {
         let (input, window_name) = until_sep(input)?;
         self.window_name = window_name.to_string();
         
+        let (input, startdir) = until_sep(input)?;
+        self.start_directory = PathBuf::from_str(startdir)
+            .or(Err(
+                Errcode::ParsingError("Failed to get path from window description".to_string())
+                ))?;
+
         let (input, autorename_str) = until_sep(input)?;
         self.automatic_rename = autorename_str == "on";
         
@@ -163,7 +169,7 @@ impl TryFrom<&WindowDescription> for TmuxWindow {
     type Error = Errcode;
 
     fn try_from(descr: &WindowDescription) -> Result<TmuxWindow, Errcode> {
-        let mut win = TmuxWindow::default();
+        let mut win = TmuxWindow::default(PathBuf::from_str("/tmp/").unwrap());
         win.parse_windescr(descr)?;
         Ok(win)
     }
@@ -232,11 +238,7 @@ impl Serialize for TmuxWindow{
 
 impl<'de> Deserialize<'de> for TmuxWindow {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        // Instantiate our Visitor and ask the Deserializer to drive
-        // it over the input data, resulting in an instance of MyMap.
+    where D: Deserializer<'de>, {
         deserializer.deserialize_map(TmuxWindowVisitor::new())
     }
 }
@@ -265,7 +267,7 @@ impl<'de> Visitor<'de> for TmuxWindowVisitor {
     where
         M: MapAccess<'de>,
     {
-        let mut window = TmuxWindow::default();
+        let mut window = TmuxWindow::default(PathBuf::from_str("/tmp/").unwrap());
 
         while let Some((key, value)) = access.next_entry()? {
             if let Err(e) = window.load_entry(key, value){
@@ -273,7 +275,6 @@ impl<'de> Visitor<'de> for TmuxWindowVisitor {
             }
         }
 
-        println!();
         Ok(window)
     }
 }
@@ -284,7 +285,6 @@ trait TmuxWindowBuilder<V>{
 
 impl TmuxWindowBuilder<Value> for TmuxWindow{
     fn load_entry(&mut self, key: String, value: Value) -> Result<(), Errcode> {
-        println!("Load entry {}: {}", key, value.to_string());
         match key.as_ref() {
             "options" => self.load_json_options(value)?,
             "panes" => self.load_json_panes(value)?,
