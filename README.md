@@ -24,13 +24,19 @@ tmuxp_session_creator create -n "name" -d /tmp/proj/ -w "code:./src/:off:0:nvim:
 Load any created session using `tmuxpload <session_name>`.
 Autocompletion should work
 
-## Save the modifications on a window
-Inside the tmux session, call the `savewin <window number>` command.
-This will not affect the commands saved inside the window, only the layout and the window name. To modify the commands inside a window, please use the `setcmds` command.
+## Save the modifications of the workspace
+Inside the tmux session, call the `savewin <window number>` command. You can then pass any arguments to complete the `edit` subcommand.
+**Keep in mind that the options `-n`, `-l`, `-i`, `-w` will be automatically filled by the alias created**
 
-If a pane has been created since the last save, will ask for commands to save (TODO)
+- If a pane has been created since the last save, will ask for commands to save
 
-If a pane has been deleted since the last save, will ask for commands to drop (TODO)
+- If a pane has been deleted since the last save, will ask for commands to drop
+
+- Passing `-c` arguments to the command will automatically set the commands for each pane (can be passed multiple times). You will be prompted
+to add or remove commands if you pass too much / too few of them.
+
+To save all the windows of a session, call the `saveall` command, but keep in mind that you wont be able to pass any additionnal argument from the commandline using it.
 
 ## Manually edit the file
 All the sessions files are located in `~/.tmuxp/`, with the session name as a json filename.
+**Please do not touch the "layout" field as this would break `tmuxp`**.

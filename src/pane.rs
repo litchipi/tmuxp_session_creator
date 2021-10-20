@@ -67,9 +67,36 @@ impl PaneSerializer{
         1 + self.others.len()
     }
 
-    pub fn new_pane(&mut self, cmd: String) -> Result<(), Errcode>{
-        self.others.push(cmd);
+    pub fn set_panes_cmds(&mut self, cmds: &Vec<String>) {
+        assert!(cmds.len() >= 1);
+        let mut focused_passed = 0;
+        self.others.resize(cmds.len()-1, "".to_string());
+        
+        for (n,c) in cmds.iter().enumerate() {
+            if n == self.focused_index{
+                self.focused.shell_command = c.clone();
+                focused_passed = 1;
+            } else { // if (n-focused_passed) < self.others.len() {
+                *self.others.get_mut(n-focused_passed).unwrap() = c.clone();
+            }
+        }
+    }
+
+    pub fn set_focus(&mut self, focus: usize) -> Result<(), Errcode>{
+        if focus == self.focused_index{
+            return Ok(());
+        }
+        let mut cmds = self.get_panes_cmds()?;
+        let focused = cmds.remove(focus);
+        self.others = cmds;
+        self.focused = FocusedPane::from_cmd(focused);
         Ok(())
+    }
+
+    pub fn get_panes_cmds(&mut self) -> Result<Vec<String>, Errcode>{
+        let mut allcmds = self.others.clone();
+        allcmds.insert(0, self.focused.shell_command.clone());
+        Ok(allcmds)
     }
 }
 

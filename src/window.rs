@@ -9,8 +9,11 @@ use std::path::PathBuf;
 use std::cmp::Ordering;
 use std::convert::TryFrom;
 
+use text_io::{read, scan};
+
 use nom::IResult;
 use nom::bytes::complete::take_until;
+
 
 use crate::errors::Errcode;
 use crate::pane::{PaneSerializer, FocusedPane};
@@ -23,13 +26,46 @@ pub struct TmuxWindow {
     pub window_name: String,
     pub layout: Option<String>,
     pub focus: bool,
-    start_directory: PathBuf,
+    pub start_directory: PathBuf,
 
-    pane_focused: usize,
-    panes: PaneSerializer,
+    pub panes: PaneSerializer,
 
     // options
     automatic_rename: bool,
+}
+
+impl TryFrom<&WindowDescription> for TmuxWindow {
+    type Error = Errcode;
+
+    fn try_from(descr: &WindowDescription) -> Result<TmuxWindow, Errcode> {
+        let mut win = TmuxWindow::default(PathBuf::from_str("/tmp/").unwrap());
+        win.parse_windescr(descr)?;
+        Ok(win)
+    }
+}
+
+impl Into<WindowDescription> for TmuxWindow {
+    // TODO Parse WindowDescription
+    fn into(self) -> WindowDescription {
+        String::from("")
+    }
+}
+
+const LAYOUT_DESCR_TAG: &'static str = "#";
+const WINDOWDESCR_PARSER_SEP: &'static str = ":";
+
+fn until_sep(s: &str) -> IResult<&str, &str> {
+    assert!(s.len() >= WINDOWDESCR_PARSER_SEP.len());
+    let inp = if s.starts_with(WINDOWDESCR_PARSER_SEP) {
+        s.strip_prefix(WINDOWDESCR_PARSER_SEP).unwrap()
+    } else {
+        s
+    };
+    if !inp.contains(WINDOWDESCR_PARSER_SEP) {
+        Ok(("", inp))
+    } else {
+        take_until(WINDOWDESCR_PARSER_SEP)(inp)
+    }
 }
 
 impl TmuxWindow {
@@ -38,7 +74,6 @@ impl TmuxWindow {
             window_name: String::from("bash"),
             layout: None,
             focus: false,
-            pane_focused: 0,
             panes: PaneSerializer::create(
                 FocusedPane::from_cmd("clear && bash".to_string()), 0,
                 vec![]),
@@ -138,66 +173,58 @@ impl TmuxWindow {
         Ok(())
     }
 
+
+
+
+    /*          Window Configuration modifiers          */
     pub fn set_layout(&mut self, layout: &String) -> Result<(), Errcode> {
         let n = get_npane_from_layout(layout)?;
         
         let npanes = self.panes.nb_panes();
-        match n.cmp(&npanes){
-            Ordering::Less => { self.drop_cmds(npanes - n)?; },
-            Ordering::Equal => {},
-            Ordering::Greater => { self.new_cmds(n - npanes)?; },
-        }
+        let cmds = match n.cmp(&npanes){
+            Ordering::Less => { self.drop_cmds(npanes - n)? },
+            Ordering::Equal => { self.panes.get_panes_cmds()? },
+            Ordering::Greater => { self.new_cmds(n - npanes)? },
+        };
+        println!("Commands to set to panes: {:?}", cmds);
+        self.panes.set_panes_cmds(&cmds);
 
         self.layout = Some(layout.clone());
         Ok(())
     }
 
-    pub fn drop_cmds(&mut self, ndrop: usize) -> Result<(), Errcode> {
-        println!("Dropping {} commands", ndrop);
-        //TODO
-        Ok(())
-    }
-
-    pub fn new_cmds(&mut self, nnew: usize) -> Result<(), Errcode> {
-        for _ in 0..nnew {
-            //TODO Get new command from stdin
-            self.panes.new_pane("clear && bash".to_string())?;
+    pub fn drop_cmds(&mut self, ndrop: usize) -> Result<Vec<String>, Errcode> {
+        let mut cmds = self.panes.get_panes_cmds()?;
+        for _ in 0..ndrop{
+            println!("\n\nCommands in panes: ");
+            for (n, c) in cmds.iter().enumerate(){
+                println!("\t{}: {}", n, c);
+            }
+            println!("Enter the number of the command to drop: ");
+            let dropped : usize = read!();
+            let dropped_cmd = cmds.remove(dropped);
+            println!("Dropping command \"{}\"", dropped_cmd);
+            //TODO  Allow to undo drops (keep the whole history)
         }
-        Ok(())
+        Ok(cmds)
     }
-}
 
-impl TryFrom<&WindowDescription> for TmuxWindow {
-    type Error = Errcode;
-
-    fn try_from(descr: &WindowDescription) -> Result<TmuxWindow, Errcode> {
-        let mut win = TmuxWindow::default(PathBuf::from_str("/tmp/").unwrap());
-        win.parse_windescr(descr)?;
-        Ok(win)
-    }
-}
-
-impl Into<WindowDescription> for TmuxWindow {
-    // TODO Parse WindowDescription
-    fn into(self) -> WindowDescription {
-        String::from("")
-    }
-}
-
-const LAYOUT_DESCR_TAG: &'static str = "#";
-const WINDOWDESCR_PARSER_SEP: &'static str = ":";
-
-fn until_sep(s: &str) -> IResult<&str, &str> {
-    assert!(s.len() >= WINDOWDESCR_PARSER_SEP.len());
-    let inp = if s.starts_with(WINDOWDESCR_PARSER_SEP) {
-        s.strip_prefix(WINDOWDESCR_PARSER_SEP).unwrap()
-    } else {
-        s
-    };
-    if !inp.contains(WINDOWDESCR_PARSER_SEP) {
-        Ok(("", inp))
-    } else {
-        take_until(WINDOWDESCR_PARSER_SEP)(inp)
+    pub fn new_cmds(&mut self, nnew: usize) -> Result<Vec<String>, Errcode> {
+        let mut cmds = self.panes.get_panes_cmds()?;
+        println!("Asking for {} new commands", nnew);
+        for _ in 0..nnew{
+            println!("\n\nCommands in panes: ");
+            for (n, c) in cmds.iter().enumerate(){
+                println!("\t{}: {}", n, c);
+            }
+            println!("Enter a new command: ");
+            let cmd: String;
+            scan!("{}\n", cmd);
+            cmds.push(cmd);
+            println!("Added command \"{}\"", cmds.last().unwrap());
+            //TODO  Allow to undo adds (keep the whole history)
+        }
+        Ok(cmds)
     }
 }
 

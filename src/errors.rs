@@ -1,3 +1,4 @@
+use std::fmt;
 use std::num::ParseIntError;
 
 #[derive(Debug)]
@@ -32,4 +33,10 @@ impl From<nom::Err<nom::error::Error<&str>>> for Errcode {
 
 impl From<ParseIntError> for Errcode {
     fn from(e: ParseIntError) -> Errcode { Errcode::ParsingError(format!("Error parsing int: {:?}", e)) }
+}
+
+impl fmt::Display for Errcode{
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{:?}", self)
+    }
 }

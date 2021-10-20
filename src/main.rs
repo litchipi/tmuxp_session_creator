@@ -8,6 +8,8 @@ mod pane;
 mod window;
 mod serialisation;
 
+extern crate text_io;
+
 use errors::handle_error;
 use cli::Commands;
 

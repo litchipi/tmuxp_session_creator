@@ -1,5 +1,7 @@
 use structopt::StructOpt;
 
+use std::path::PathBuf;
+
 use crate::session::TmuxSession;
 use crate::cli::CliSubCommand;
 use crate::errors::Errcode;
@@ -22,6 +24,18 @@ pub struct TmuxpSessionEdition {
     #[structopt(short="w", long,)]
     pub window_name: Option<String>,
 
+    /// The commands to pass to each pane. Can be passed multiple times
+    #[structopt(short="c", long="command")]
+    pub commandlist: Vec<String>,
+    
+    /// The pane / command to focus on the window
+    #[structopt(short="f", long)]
+    pub focus: Option<usize>,
+
+    /// Change the start directory of the window
+    #[structopt(short="d", long)]
+    pub start_directory: Option<PathBuf>,
+
     /// The layout to apply to the window
     #[structopt(short="d", long,)]
     pub dump: bool,
@@ -30,14 +44,25 @@ pub struct TmuxpSessionEdition {
 impl CliSubCommand for TmuxpSessionEdition {
 
     fn execute_command(&self) -> Result<(), Errcode>{
-        println!("Session name \"{}\"", self.name);
         let mut tmuxses = TmuxSession::load(&self.name)?;
-        println!("Window {}", self.window_ind);
 
         let mut win = match tmuxses.get_window_ref(self.window_ind){
             Ok(w) => w,
             Err(_) => tmuxses.init_new_window()?,
         };
+
+        let cmdslen = self.commandlist.len();
+        if cmdslen > 0 {
+            win.panes.set_panes_cmds(&self.commandlist);
+        }
+
+        if let Some(p) = &self.start_directory {
+            win.start_directory = p.clone();
+        }
+
+        if let Some(f) = &self.focus {
+            win.panes.set_focus(*f)?;
+        }
 
         if let Some(l) = &self.layout {
             win.set_layout(l)?;

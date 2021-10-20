@@ -83,7 +83,6 @@ impl TmuxSession {
 
     pub fn load(name: &String) -> Result<TmuxSession, Errcode> {
         let fname = Self::get_session_fname(name)?;
-        println!("Reading session from file {} ...", fname.to_str().unwrap());
         let jsonses = fs::read_to_string(fname)?;
         let res = serde_json::from_str(&jsonses)?;
         Ok(res)
@@ -91,7 +90,6 @@ impl TmuxSession {
 
     pub fn write_to_file(&self) -> Result<(), Errcode> {
         let output_fname = Self::get_session_fname(&self.session_name)?;
-        println!("Writting configuration in {}", output_fname.to_str().unwrap());
         let mut file = fs::File::create(output_fname)?;
         file.write_all(to_string_pretty(self)?.as_bytes())?;
         Ok(())

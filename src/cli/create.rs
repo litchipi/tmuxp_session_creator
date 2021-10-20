@@ -34,6 +34,10 @@ pub struct TmuxpSessionCreation {
     /// Create a default "bash" tmux session
     #[structopt(short="D", long)]
     pub default: bool,
+
+    /// Dump the content to stdout instead of writing it to the file
+    #[structopt(short="o", long="dump")]
+    pub dump: bool,
 }
 
 impl CliSubCommand for TmuxpSessionCreation {
@@ -45,8 +49,12 @@ impl CliSubCommand for TmuxpSessionCreation {
                 return Err(e);
             }
         };
-
-        tmuxses.write_to_file()?;
+        
+        if self.dump {
+            tmuxses.dump()?;
+        } else {
+            tmuxses.write_to_file()?;
+        }
         Ok(())
     }
 
