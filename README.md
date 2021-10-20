@@ -40,3 +40,6 @@ To save all the windows of a session, call the `saveall` command, but keep in mi
 ## Manually edit the file
 All the sessions files are located in `~/.tmuxp/`, with the session name as a json filename.
 **Please do not touch the "layout" field as this would break `tmuxp`**.
+
+# Demo
+The demo of that tool can be seen at https://asciinema.org/a/443482
