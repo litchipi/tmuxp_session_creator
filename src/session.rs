@@ -4,16 +4,15 @@ use std::fs;
 use std::io::prelude::*;
 
 use serde::{Serializer, Serialize, Deserialize};
-use serde::ser::{SerializeStruct, SerializeSeq};
-use serde_json::{to_string_pretty, from_str};
+use serde::ser::SerializeStruct;
+use serde_json::to_string_pretty;
 
 use dirs::home_dir;
 
 use crate::errors::Errcode;
-use crate::create::TmuxpSessionCreation;
+use crate::cli::create::TmuxpSessionCreation;
 
-use crate::window::{WindowDescription, TmuxWindow};
-use crate::pane::TmuxPane;
+use crate::window::TmuxWindow;
 
 #[derive(Debug, Deserialize)]
 pub struct TmuxSession {
@@ -104,14 +103,14 @@ impl TmuxSession {
         Ok(())
     }
 
-    pub fn apply_layout(&mut self, window_index: usize, layout: &String) -> Result<(), Errcode> {
-        let win: &mut TmuxWindow = self.get_window_ref(window_index)?;
-        win.set_layout(layout)
-    }
-
     pub fn get_window_ref(&mut self, window_index: usize) -> Result<&mut TmuxWindow, Errcode> {
         let winlen = self.windows.len();
         self.windows.get_mut(window_index)
             .ok_or(Errcode::WindowNotFound(window_index, winlen))
+    }
+
+    pub fn init_new_window(&mut self) -> Result<&mut TmuxWindow, Errcode> {
+        self.windows.push(TmuxWindow::default(self.start_directory.clone()));
+        Ok(self.windows.last_mut().unwrap())
     }
 }

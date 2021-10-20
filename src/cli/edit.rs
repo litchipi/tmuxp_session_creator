@@ -3,7 +3,6 @@ use structopt::StructOpt;
 use crate::session::TmuxSession;
 use crate::cli::CliSubCommand;
 use crate::errors::Errcode;
-use crate::window::{WindowDescription, WindowLayout, get_npane_from_layout};
 
 #[derive(Debug, StructOpt)]
 pub struct TmuxpSessionEdition {
@@ -12,15 +11,19 @@ pub struct TmuxpSessionEdition {
     pub name: String,
 
     /// The window to modify
-    #[structopt(short="w", long)]
+    #[structopt(short="i", long)]
     pub window_ind: usize,
 
     /// The layout to apply to the window
-    #[structopt(short, long,)]
+    #[structopt(short="l", long,)]
     pub layout: Option<String>,
 
+    /// The window name to use
+    #[structopt(short="w", long,)]
+    pub window_name: Option<String>,
+
     /// The layout to apply to the window
-    #[structopt(short, long,)]
+    #[structopt(short="d", long,)]
     pub dump: bool,
 }
 
@@ -31,12 +34,17 @@ impl CliSubCommand for TmuxpSessionEdition {
         let mut tmuxses = TmuxSession::load(&self.name)?;
         println!("Window {}", self.window_ind);
 
-        if let Some(l) = &self.layout {
-            let n = get_npane_from_layout(l)?;
-            println!("{} panes", n);
+        let mut win = match tmuxses.get_window_ref(self.window_ind){
+            Ok(w) => w,
+            Err(_) => tmuxses.init_new_window()?,
+        };
 
-            let lenwin = tmuxses.windows.len();
-            tmuxses.apply_layout(self.window_ind, l)?;
+        if let Some(l) = &self.layout {
+            win.set_layout(l)?;
+        }
+
+        if let Some(n) = &self.window_name {
+            win.window_name = n.clone();
         }
 
         if self.dump {

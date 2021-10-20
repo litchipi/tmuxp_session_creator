@@ -66,6 +66,11 @@ impl PaneSerializer{
     pub fn nb_panes(&self) -> usize {
         1 + self.others.len()
     }
+
+    pub fn new_pane(&mut self, cmd: String) -> Result<(), Errcode>{
+        self.others.push(cmd);
+        Ok(())
+    }
 }
 
 impl Serialize for PaneSerializer{

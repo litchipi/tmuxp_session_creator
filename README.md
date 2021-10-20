@@ -5,20 +5,8 @@ Personnal tool, use it at your own risk
 
 ## Setup
 - Get [tmuxp](https://github.com/tmux-python/tmuxp)
-- Build this tool with `cargo build --release`
-- Copy the binary `cp ./target/release/tmuxp_session_creator ~/.local/bin/`
-- Add some aliases and wrappers to your `~/.bashrc`:
-``` bash
-mkdir -p ~/.tmuxp/
-alias quit='tmux kill-session; exit 0'
-alias listses='ls ~/.tmuxp/ | awk -F "/" "{print $NF}" | cut -d "." -f 1'
-alias tmuxload="$(which tmuxp) load"
-alias savelayout='test $TMUX && tmuxp_session_creator edit -n '"\"$(tmux display-message -p '#S')\" -w \"$(tmux display-message -p '#I')\" -l \"$(tmux display-message -p '#{window_layout}')\"
-
-function _tmuxload_autocomplete {
-    COMPREPLY=($(compgen -W "$(listses)" "${COMP_WORDS[1]}"))
-}
-```
+- Run the script `install.sh`
+- Enjoy
 
 ## Create a new session
 ``` bash
@@ -36,8 +24,9 @@ tmuxp_session_creator create -n "name" -d /tmp/proj/ -w "code:./src/:off:0:nvim:
 Load any created session using `tmuxpload <session_name>`.
 Autocompletion should work
 
-## Save the layout of the current session
-Inside the tmux session, call the `savelayout` alias we created.
+## Save the modifications on a window
+Inside the tmux session, call the `savewin <window number>` command.
+This will not affect the commands saved inside the window, only the layout and the window name. To modify the commands inside a window, please use the `setcmds` command.
 
 If a pane has been created since the last save, will ask for commands to save (TODO)
 

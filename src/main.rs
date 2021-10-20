@@ -1,17 +1,14 @@
-#![allow(unused_imports, dead_code, unused_variables)]
 use structopt::StructOpt;
 use std::process::exit;
 
 mod errors;
 mod session;
-mod create;
 mod cli;
 mod pane;
 mod window;
-mod edit;
 mod serialisation;
 
-use errors::{Errcode, handle_error};
+use errors::handle_error;
 use cli::Commands;
 
 // TODO  Setup log for entire project

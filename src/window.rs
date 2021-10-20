@@ -1,5 +1,5 @@
 use serde::{Serializer, Serialize, Deserialize, Deserializer};
-use serde::ser::{SerializeStruct, SerializeSeq};
+use serde::ser::SerializeStruct;
 use serde::de::{Visitor, MapAccess};
 use serde_json::Value;
 
@@ -8,7 +8,6 @@ use std::str::FromStr;
 use std::path::PathBuf;
 use std::cmp::Ordering;
 use std::convert::TryFrom;
-use std::collections::HashMap;
 
 use nom::IResult;
 use nom::bytes::complete::take_until;
@@ -21,7 +20,7 @@ pub type WindowDescription = String;
 
 #[derive(Debug)]
 pub struct TmuxWindow {
-    window_name: String,
+    pub window_name: String,
     pub layout: Option<String>,
     pub focus: bool,
     start_directory: PathBuf,
@@ -44,7 +43,7 @@ impl TmuxWindow {
                 FocusedPane::from_cmd("clear && bash".to_string()), 0,
                 vec![]),
             automatic_rename: true,
-            start_directory: start_directory
+            start_directory
         }
     }
 
@@ -160,8 +159,10 @@ impl TmuxWindow {
     }
 
     pub fn new_cmds(&mut self, nnew: usize) -> Result<(), Errcode> {
-        println!("Getting {} new commands", nnew);
-        //TODO
+        for _ in 0..nnew {
+            //TODO Get new command from stdin
+            self.panes.new_pane("clear && bash".to_string())?;
+        }
         Ok(())
     }
 }
@@ -226,6 +227,7 @@ impl Serialize for TmuxWindow{
         if self.focus {
             state.serialize_field("focus", &self.focus.to_string())?;
         }
+
         state.serialize_field("panes", &self.panes)?;
         state.serialize_field("options", &serde_json::json!(
             {
@@ -246,13 +248,13 @@ impl<'de> Deserialize<'de> for TmuxWindow {
 
 
 struct TmuxWindowVisitor{
-    data: u8
+    _data: u8
 }
 
 impl TmuxWindowVisitor{
     pub fn new() -> TmuxWindowVisitor{
         TmuxWindowVisitor{
-            data: 0
+            _data: 0
         }
     }
 }

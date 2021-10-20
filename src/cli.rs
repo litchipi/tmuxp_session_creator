@@ -1,9 +1,12 @@
 use structopt::StructOpt;
-use enum_dispatch::enum_dispatch;
 
 use crate::errors::Errcode;
-use crate::create::TmuxpSessionCreation;
-use crate::edit::TmuxpSessionEdition;
+
+pub mod create;
+pub mod edit;
+
+use create::TmuxpSessionCreation;
+use edit::TmuxpSessionEdition;
 
 macro_rules! cli_commands {
     ($($name:ident => $impl:ident),+) => {

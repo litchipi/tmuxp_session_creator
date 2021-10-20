@@ -2,7 +2,6 @@ use std::path::PathBuf;
 use std::convert::TryFrom;
 
 use structopt::StructOpt;
-use serde_json::to_string_pretty;
 
 use crate::cli::CliSubCommand;
 use crate::session::TmuxSession;
