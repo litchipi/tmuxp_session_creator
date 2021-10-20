@@ -32,6 +32,10 @@ pub struct TmuxpSessionEdition {
     #[structopt(short="f", long)]
     pub focus: Option<usize>,
 
+    /// Wether the window should be the focused one in the session
+    #[structopt(short="F", long)]
+    pub window_focused: bool,
+
     /// Change the start directory of the window
     #[structopt(short="d", long)]
     pub start_directory: Option<PathBuf>,
@@ -70,6 +74,10 @@ impl CliSubCommand for TmuxpSessionEdition {
 
         if let Some(n) = &self.window_name {
             win.window_name = n.clone();
+        }
+
+        if self.window_focused {
+            tmuxses.set_window_focus(self.window_ind)?;
         }
 
         if self.dump {

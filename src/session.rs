@@ -111,4 +111,17 @@ impl TmuxSession {
         self.windows.push(TmuxWindow::default(self.start_directory.clone()));
         Ok(self.windows.last_mut().unwrap())
     }
+
+    pub fn set_window_focus(&mut self, window_focus_ind: usize) -> Result<(), Errcode> {
+        let winlen = self.windows.len();
+        if window_focus_ind >= self.windows.len(){
+            return Err(Errcode::WindowNotFound(window_focus_ind, winlen));
+        }
+
+        for (n, win) in self.windows.iter_mut().enumerate() {
+            win.focus = n == window_focus_ind;
+        }
+
+        Ok(())
+    }
 }

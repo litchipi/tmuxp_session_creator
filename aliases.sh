@@ -12,6 +12,20 @@ function __saveall {
 	echo "Done"
 }
 
+function __setfocus {
+	if [ ! -n "$1" ]; then
+		echo "Usage: savelayout <window number>"
+		return 1
+	fi
+	[ "$1" -eq "$1" ] 2>/dev/null || return 1		#Ensure the input is a number
+	NWIN=$1
+	shift
+	SESSION_NAME=$(tmux display-message -p '#S')
+
+	echo "Window $NWIN is now the focused window"
+	tmuxp_session_creator edit -n "$SESSION_NAME" -i "$NWIN" -F "$@"
+}
+
 function __savewin {
 	if [ ! -n "$1" ]; then
 		echo "Usage: savelayout <window number>"
@@ -33,6 +47,7 @@ function __savewin {
 
 alias saveall="test \$TMUX && __saveall"
 alias savewin="test \$TMUX && __savewin"
+alias setfocus="test \$TMUX && __setfocus"
 
 alias quitses='tmux kill-session; exit 0'
 alias listses='ls ~/.tmuxp/ | awk -F "/" "{print $NF}" | cut -d "." -f 1'
