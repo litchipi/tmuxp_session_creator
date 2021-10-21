@@ -24,6 +24,7 @@ pub struct TmuxpSessionEdition {
     #[structopt(short="w", long,)]
     pub window_name: Option<String>,
 
+    //TODO FIXME    Keep track of the order in which commands are passed
     /// The commands to pass to each pane. Can be passed multiple times
     #[structopt(short="c", long="command")]
     pub commandlist: Vec<String>,
@@ -41,12 +42,11 @@ pub struct TmuxpSessionEdition {
     pub start_directory: Option<PathBuf>,
 
     /// The layout to apply to the window
-    #[structopt(short="d", long,)]
+    #[structopt(short="D", long,)]
     pub dump: bool,
 }
 
 impl CliSubCommand for TmuxpSessionEdition {
-
     fn execute_command(&self) -> Result<(), Errcode>{
         let mut tmuxses = TmuxSession::load(&self.name)?;
 
@@ -61,7 +61,7 @@ impl CliSubCommand for TmuxpSessionEdition {
         }
 
         if let Some(p) = &self.start_directory {
-            win.start_directory = p.clone();
+            win.start_directory = p.canonicalize()?.clone();
         }
 
         if let Some(f) = &self.focus {
