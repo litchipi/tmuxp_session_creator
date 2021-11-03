@@ -57,3 +57,4 @@ function _tmuxload_autocomplete {
     COMPREPLY=($(compgen -W "$(listses)" "${COMP_WORDS[1]}"))
 }
 
+complete -F _tmuxload_autocomplete tmuxload
