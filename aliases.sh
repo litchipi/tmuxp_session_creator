@@ -51,7 +51,11 @@ alias setfocus="test \$TMUX && __setfocus"
 
 alias quitses='tmux kill-session; exit 0'
 alias listses='ls ~/.tmuxp/ | awk -F "/" "{print $NF}" | cut -d "." -f 1'
-alias tmuxload="$(which tmuxp) load"
+alias tmuxload="__tmuxload"
+
+function __tmuxload {
+    $(which tmuxp) load $1
+}
 
 function _tmuxload_autocomplete {
     COMPREPLY=($(compgen -W "$(listses)" "${COMP_WORDS[1]}"))
